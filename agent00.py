@@ -13,6 +13,13 @@ def drop_piece(board, column, player):
 
 # returns a single array of all valid columns indices
 def get_valid_locations(board):
+    """
+    Loop through the board columns to check if the top row of the column is occupied,
+    if not then we append the value of the index for each valid column and return the 
+    correct array.
+
+    """
+
     valid_columns = []
     for c in range(MAX_COLUMNS):
         if board[MAX_ROWS - 1][c] == 0:
@@ -52,6 +59,14 @@ def is_terminal_node(board):
 
 # sliding window to check scores depending on given window
 def score_window(window, player):
+    """
+    We take a given window by the evaluate func, that returns a
+    single dimensional array of values to look at instead of the whole board
+
+    Given that window we evaluate the score by counting nonzero values inside the window
+    and returning a total score based on valid pieces for the player
+    """
+
     opponent = 2 if player == 1 else 1
     
     player_count = 0
@@ -83,9 +98,15 @@ def score_window(window, player):
     return score
 
 def evaluate_board(board, player):
+    """
+    Get the total score for any sequence of pieces for a player
+    and returning that score to then be processed by minimax
+
+    """
+
     score = 0
 
-    # Center column preference (expanded loop)
+    # taking center column (best start)
     center_column_index = MAX_COLUMNS // 2
     center_count = 0
     for r in range(MAX_ROWS):
@@ -97,6 +118,7 @@ def evaluate_board(board, player):
     for r in range(MAX_ROWS):
         for c in range(MAX_COLUMNS - 3):
             window = []
+
             for i in range(4):
                 window.append(board[r][c + i])
             score += score_window(window, player)
@@ -105,6 +127,7 @@ def evaluate_board(board, player):
     for c in range(MAX_COLUMNS):
         for r in range(MAX_ROWS - 3):
             window = []
+
             for i in range(4):
                 window.append(board[r + i][c])
             score += score_window(window, player)
@@ -113,6 +136,7 @@ def evaluate_board(board, player):
     for r in range(MAX_ROWS - 3):
         for c in range(MAX_COLUMNS - 3):
             window = []
+
             for i in range(4):
                 window.append(board[r + i][c + i])
             score += score_window(window, player)
@@ -121,6 +145,7 @@ def evaluate_board(board, player):
     for r in range(3, MAX_ROWS):
         for c in range(MAX_COLUMNS - 3):
             window = []
+
             for i in range(4):
                 window.append(board[r - i][c + i])
             score += score_window(window, player)
@@ -129,6 +154,17 @@ def evaluate_board(board, player):
 
 # minimax implementation
 def minimax(board, player, depth, alpha, beta, maximizing_player, root_player=1):
+    """
+    We check initially if were at the last depth, or if there arent any remaining nodes in columns
+    then we check if theres a winning move else we reevaluate.
+
+    Finally we take the core principle of the minimax function and assign scores to corresponding players
+    depending on the one being evaluated.
+
+    We also take an alpha beta pruning approach to improve performance and reduce redundancy in searches
+
+    """
+
     if depth == 0 or is_terminal_node(board):
         if winning_move(board, root_player):
             return 100000000
@@ -171,6 +207,12 @@ def minimax(board, player, depth, alpha, beta, maximizing_player, root_player=1)
 
 # pseudo main function 
 def aiplayer1(board):
+    """
+    Initial search function that initiates the recusive depth algorithm to ensure the best possible
+    move given the current board
+
+    """
+
     root_player = 1
     player = 1
 
