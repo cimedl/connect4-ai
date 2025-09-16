@@ -4,13 +4,14 @@ MAX_ROWS = 6
 MAX_COLUMNS = 7
 MAX_DEPTH = 4
 
-# drops on lowest row
+# drops piece on board 
 def drop_piece(board, column, player):
     for row in range(MAX_ROWS):
         if board[row][column] == 0:
             board[row][column] = player
             return
 
+# returns a single array of all valid columns indices
 def get_valid_locations(board):
     valid_columns = []
     for c in range(MAX_COLUMNS):
@@ -19,46 +20,37 @@ def get_valid_locations(board):
     return valid_columns
 
 def winning_move(board, piece):
-    # horizontal
-    for c in range(MAX_COLUMNS - 3):
+    # Check horizontal locations for win
+    for c in range(MAX_COLUMNS-3):
         for r in range(MAX_ROWS):
-            if (
-                board[r][c] == piece and board[r][c + 1] == piece and
-                board[r][c + 2] == piece and board[r][c + 3] == piece
-            ):
+            if board[r][c] == piece and board[r][c+1] == piece and board[r][c+2] == piece and board[r][c+3] == piece:
                 return True
-    # vertical
+    # Check vertical locations for win
     for c in range(MAX_COLUMNS):
-        for r in range(MAX_ROWS - 3):
-            if (
-                board[r][c] == piece and board[r + 1][c] == piece and
-                board[r + 2][c] == piece and board[r + 3][c] == piece
-            ):
+        for r in range(MAX_ROWS-3):
+            if board[r][c] == piece and board[r+1][c] == piece and board[r+2][c] == piece and board[r+3][c] == piece:
                 return True
-    # positive diagonal
-    for c in range(MAX_COLUMNS - 3):
-        for r in range(MAX_ROWS - 3):
-            if (
-                board[r][c] == piece and board[r + 1][c + 1] == piece and
-                board[r + 2][c + 2] == piece and board[r + 3][c + 3] == piece
-            ):
+ 
+    # Check positively sloped diaganols
+    for c in range(MAX_COLUMNS-3):
+        for r in range(MAX_ROWS-3):
+            if board[r][c] == piece and board[r+1][c+1] == piece and board[r+2][c+2] == piece and board[r+3][c+3] == piece:
                 return True
-    # negative diagonal
-    for c in range(MAX_COLUMNS - 3):
+ 
+    # Check negatively sloped diaganols
+    for c in range(MAX_COLUMNS-3):
         for r in range(3, MAX_ROWS):
-            if (
-                board[r][c] == piece and board[r - 1][c + 1] == piece and
-                board[r - 2][c + 2] == piece and board[r - 3][c + 3] == piece
-            ):
-                return True
-    return False
+            if board[r][c] == piece and board[r-1][c+1] == piece and board[r-2][c+2] == piece and board[r-3][c+3] == piece:
+                return True 
 
+# checks if no more valid locations or a player won
 def is_terminal_node(board):
     return (
         winning_move(board, 1) or winning_move(board, 2) or
         len(get_valid_locations(board)) == 0
     )
 
+# sliding window to check scores depending on given window
 def score_window(window, player):
     opponent = 2 if player == 1 else 1
     
@@ -84,7 +76,7 @@ def score_window(window, player):
         score += 10
 
     if opponent_count == 3 and empty_count == 1:
-        score -= 80
+        score -= 100
     if opponent_count == 4:
         score -= 100000
 
@@ -101,7 +93,7 @@ def evaluate_board(board, player):
             center_count += 1
     score += center_count * 6
 
-    # Horizontal
+    # checking score horizontally
     for r in range(MAX_ROWS):
         for c in range(MAX_COLUMNS - 3):
             window = []
@@ -109,7 +101,7 @@ def evaluate_board(board, player):
                 window.append(board[r][c + i])
             score += score_window(window, player)
 
-    # Vertical
+    # checking score vertically
     for c in range(MAX_COLUMNS):
         for r in range(MAX_ROWS - 3):
             window = []
@@ -117,7 +109,7 @@ def evaluate_board(board, player):
                 window.append(board[r + i][c])
             score += score_window(window, player)
 
-    # Positive diagonal
+    # checking score diagonally
     for r in range(MAX_ROWS - 3):
         for c in range(MAX_COLUMNS - 3):
             window = []
@@ -125,7 +117,7 @@ def evaluate_board(board, player):
                 window.append(board[r + i][c + i])
             score += score_window(window, player)
 
-    # Negative diagonal
+    # checking score on negative diagonally
     for r in range(3, MAX_ROWS):
         for c in range(MAX_COLUMNS - 3):
             window = []
@@ -135,7 +127,7 @@ def evaluate_board(board, player):
 
     return score
 
-# alpha-beta pruning minimax (procedural, no Node)
+# minimax implementation
 def minimax(board, player, depth, alpha, beta, maximizing_player, root_player=1):
     if depth == 0 or is_terminal_node(board):
         if winning_move(board, root_player):
@@ -148,38 +140,49 @@ def minimax(board, player, depth, alpha, beta, maximizing_player, root_player=1)
     valid_locations = get_valid_locations(board)
 
     if maximizing_player:
-        value = -np.inf
+        score = -np.inf
         for column in valid_locations:
+
             new_board = np.copy(board)
             drop_piece(new_board, column, player)
+
             child_player = 2 if player == 1 else 1
-            value = max(value, minimax(new_board, child_player, depth - 1, alpha, beta, False, root_player))
-            alpha = max(alpha, value)
+            score = max(score, minimax(new_board, child_player, depth - 1, alpha, beta, False, root_player))
+
+            alpha = max(alpha, score)
             if alpha >= beta:
                 break
-        return value
-    else:
-        value = np.inf
+        return score
+    elif not maximizing_player:
+        score = np.inf
+
         for column in valid_locations:
             new_board = np.copy(board)
+
             drop_piece(new_board, column, player)
             child_player = 1 if player == 2 else 2
-            value = min(value, minimax(new_board, child_player, depth - 1, alpha, beta, True, root_player))
-            beta = min(beta, value)
+
+            score = min(score, minimax(new_board, child_player, depth - 1, alpha, beta, True, root_player))
+
+            beta = min(beta, score)
             if alpha >= beta:
                 break
-        return value
+        return score
 
+# pseudo main function 
 def aiplayer1(board):
     root_player = 1
     player = 1
+
     best_score = -np.inf
     best_col = 0
 
     valid_locations = get_valid_locations(board)
     for col in valid_locations:
+
         new_board = np.copy(board)
         drop_piece(new_board, col, player)
+
         score = minimax(new_board, 2 if player == 1 else 1, MAX_DEPTH, -np.inf, np.inf, False, root_player)
         if score > best_score:
             best_score = score
