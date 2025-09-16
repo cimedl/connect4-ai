@@ -9,7 +9,7 @@ def get_valid_locations(board):
     valid_columns = []
 
     for column in range(MAX_COLUMNS):
-        if board[MAX_COLUMNS - 1][column] == 0:
+        if board[MAX_ROWS - 1][column] == 0:
             valid_columns.append(column)
 
     return valid_columns
@@ -18,6 +18,7 @@ def get_valid_locations(board):
 def is_terminal_node(board):
     if (len(get_valid_locations(board)) == 0 or winning_move(board, 1) or winning_move(board, 2)):
         return True
+    return False
 
 # drops piece on board 
 def drop_piece(board, column, player):
@@ -80,6 +81,7 @@ def window_score(window, player):
     elif opponent_score == 3 and zero_score == 1:
         total_score += -100
 
+    return total_score
 
 # evaluation function to check for horizontal, vertical and diagonal scores
 def evaluate_board(board, player):
@@ -122,7 +124,7 @@ def minimax(board, player, depth, maximizing_player, root_player):
     if depth == 0 or is_terminal_node(board):
         if winning_move(board, root_player):
             return 1000000
-        elif winning_move(board, 2 if player == 2 else 1):
+        elif winning_move(board, 2 if player == 1 else 1):
             return -1000000
         else:
             return evaluate_board(board, root_player)
@@ -130,10 +132,10 @@ def minimax(board, player, depth, maximizing_player, root_player):
     if maximizing_player:
         score = -np.inf
 
-        for column in range( get_valid_locations(board) ):
+        for column in get_valid_locations(board):
             new_board = np.copy(board)
 
-            drop_piece(board, column, player)
+            drop_piece(new_board, column, player)
 
             next_player = 2 if player == 1 else 1
 
@@ -144,13 +146,13 @@ def minimax(board, player, depth, maximizing_player, root_player):
     elif not maximizing_player:
         score = np.inf
 
-        for column in range( get_valid_locations(board) ):
+        for column in get_valid_locations(board):
             new_board = np.copy(board)
 
-            drop_piece(board, column, player)
+            drop_piece(new_board, column, player)
             next_player = 1 if player == 2 else 2
 
-            score = max(score, minimax(new_board, next_player, depth - 1, True, root_player))
+            score = min(score, minimax(new_board, next_player, depth - 1, True, root_player))
 
         return score
 
@@ -162,7 +164,7 @@ def aiplayer1(board):
     best_score = -np.inf
     best_column = 0
 
-    for column in range(MAX_COLUMNS):
+    for column in get_valid_locations(board):
         new_board = np.copy(board)
 
         drop_piece(new_board, column, player)
