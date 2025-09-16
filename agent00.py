@@ -2,7 +2,7 @@ import numpy as np
 
 MAX_ROWS = 6
 MAX_COLUMNS = 7
-MAX_DEPTH = 4
+MAX_DEPTH = 5
 
 # drops piece on board 
 def drop_piece(board, column, player):
